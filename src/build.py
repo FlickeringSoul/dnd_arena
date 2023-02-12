@@ -3,11 +3,11 @@ from dataclasses import dataclass
 from typing import Optional
 
 import utils
-from action import Action, ActionCost, ActionSteps
+from action import Action, ActionCost, EndOfTurnAction
 from attribute import Attribute
 from character import Character
 from event import ActionChoice
-from feature import AgonizingBlast, Feature
+from feature import AgonizingBlast, Feature, StartOfTurnFeature
 from spell import EldritchBlast
 
 
@@ -16,6 +16,9 @@ class Build:
     character: Character
     features: list[Feature]
     possible_actions: list[Action]
+
+    def __post_init__(self):
+        self.possible_actions.append(EndOfTurnAction())
 
     def available_actions(self) -> list[ActionChoice]:
         available_actions = []
@@ -47,7 +50,7 @@ def get_the_genie_build(level: int) -> Build:
     )
     build = Build(
         character,
-        [],
+        [StartOfTurnFeature(owner=character)],
         possible_actions=[EldritchBlast(spellcasting_ability=Attribute.Charisma)]
     )
     for lvl in range(1, level+1):

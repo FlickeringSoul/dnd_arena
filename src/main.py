@@ -11,7 +11,7 @@ from state import State
 
 
 def main():
-    the_genie = get_the_genie_build(1)
+    the_genie = get_the_genie_build(5)
     punching_ball = Build(
         character=Character({attribute: 10 for attribute in Attribute}),
         features=[],
@@ -25,10 +25,13 @@ def main():
 
     while True:
         outcomes = state.outcomes()
+        display_outcomes = []
         for outcome in outcomes:
             if isinstance(outcome, ActionChoice):
                 outcome.target = punching_ball.character
-        print(f'Possible outcomes are: {outcomes}')
+                display_outcomes.append(state.creatures[state.current_turn_index].possible_actions[outcome.action_index].__class__.__name__)
+
+        print(f'Possible outcomes are: {display_outcomes if display_outcomes else outcomes}')
         index = int(input())
         outcome = outcomes[index]
         print(f'Chosen outcome is: {outcome}')

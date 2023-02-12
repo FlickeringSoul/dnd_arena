@@ -9,7 +9,6 @@ from attribute import Attribute
 from character import Character
 from damage import Damage, DamageType
 from dices import DiceBag, Dices
-from event import EventTypes
 
 
 def cantrip_multiplier(caster_level: int) -> int:
@@ -35,7 +34,7 @@ class Spell(Action):
 
 
 class ProduceFlame(Spell):
-    def get_action_effect(self, origin: Character, target: Character) -> 'ActionEffect':
+    def get_action_event(self, origin: Character, target: Character) -> 'ActionEffect':
         dice_damages = [(Dices.d8, DamageType.Fire)] * cantrip_multiplier(origin.level)
         return ActionEffect(
             origin=origin,
@@ -52,7 +51,7 @@ class EldritchBlastBeam(Spell):
     action_cost: ActionCost = ActionCost.NONE
     number_of_uses: int
 
-    def get_action_effect(self, origin: Character, target: Character) -> 'ActionEffect':
+    def get_action_event(self, origin: Character, target: Character) -> 'ActionEffect':
         if self.number_of_uses <= 0:
             raise ValueError
         self.number_of_uses -= 1
@@ -71,13 +70,13 @@ class EldritchBlastBeam(Spell):
 class EldritchBlast(Spell):
     action_cost: ActionCost = ActionCost.ACTION
 
-    def get_action_effect(self, origin: Character, target: Character) -> 'ActionEffect':
+    def get_action_event(self, origin: Character, target: Character) -> 'ActionEffect':
         number_of_blast = 1 + cantrip_multiplier(origin.level)
         eldritch_blast_beam = EldritchBlastBeam(
             spellcasting_ability=self.spellcasting_ability,
             number_of_uses=number_of_blast
         )
-        first_beam = eldritch_blast_beam.get_action_effect(origin, target)
+        first_beam = eldritch_blast_beam.get_action_event(origin, target)
         first_beam.new_actions = [eldritch_blast_beam]
         return first_beam
 

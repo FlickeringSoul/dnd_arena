@@ -4,9 +4,10 @@ import logging
 from dataclasses import dataclass
 from typing import Optional
 
-from action import Action, ActionCost, ActionEffect, ActionSteps
+from action import Action, ActionCost, ActionEffect
 from build import Build
-from event import ActionChoice, Event, FeatureChoice, RandomOutcome
+from event import (ActionChoice, EndOfTurnEvent, Event, EventSteps,
+                   FeatureChoice, RandomOutcome, StartOfTurnEvent)
 from feature import Feature
 
 
@@ -19,6 +20,9 @@ class State:
     def next_turn_index(self) -> int:
         # should rely on initiative score
         return (self.current_turn_index + 1) % len(self.creatures)
+
+    def current_turn_creature(self) -> Build:
+        return self.creatures[self.current_turn_index]
 
     def current_event(self) -> Optional[Event]:
         return self.event_queue[-1]
@@ -47,9 +51,7 @@ class State:
 
     def outcomes(self) -> list[ActionChoice | FeatureChoice | RandomOutcome]:
         if len(self.event_queue) == 0:
-            actions = self.creatures[self.current_turn_index].available_actions()
-            actions.append('END OF TURN')
-            return actions
+            return self.current_turn_creature().available_actions()
         current_event = self.current_event()
         next_to_trigger = self.get_next_to_trigger()
         if isinstance(next_to_trigger, Feature):
@@ -60,17 +62,14 @@ class State:
 
     def next(self, outcome: ActionChoice | FeatureChoice | RandomOutcome) -> None:
         if len(self.event_queue) == 0:
-            if outcome == 'END OF TURN':
-                self.current_turn_index = self.next_turn_index()
-                return
             assert(isinstance(outcome, ActionChoice))
-            current_turn_creature = self.creatures[self.current_turn_index]
+            current_turn_creature = self.current_turn_creature()
             action = current_turn_creature.possible_actions[outcome.action_index]
             if action.action_cost is ActionCost.ACTION:
                 current_turn_creature.character.action = False
             elif action.action_cost is ActionCost.BONUS_ACTION:
                 current_turn_creature.character.bonus_action = False
-            action_effect = action.get_action_effect(origin=current_turn_creature.character, target=outcome.target)
+            action_effect = action.get_action_event(origin=current_turn_creature.character, target=outcome.target)
             self.event_queue.append(action_effect)
             return
         current_event = self.current_event()
@@ -80,9 +79,12 @@ class State:
             self.increase_action_effect_counter()
         elif isinstance(next_to_trigger, Event):
             interrupting_event = next_to_trigger.apply_outcome(outcome)
-            assert(isinstance(current_event, ActionEffect))
-            if current_event.current_action_step is ActionSteps.END:
+            if current_event.event_step is EventSteps.END:
                 self.event_queue.pop()
+                if isinstance(current_event, EndOfTurnEvent):
+                    assert(self.event_queue == [])
+                    self.current_turn_index = self.next_turn_index()
+                    self.event_queue.append(StartOfTurnEvent(origin_character=self.current_turn_creature().character))
         else:
             raise TypeError(f'next_to_trigger should be')
         if interrupting_event is not None:

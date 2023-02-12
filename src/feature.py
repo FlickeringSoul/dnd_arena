@@ -1,4 +1,5 @@
 
+from abc import ABC
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -6,16 +7,27 @@ from action import ActionEffect
 from attribute import Attribute
 from character import Character
 from damage import DamageType
-from event import (Event, EventListener, EventTypes, FeatureChoice,
-                   RandomOutcome)
+from event import (Event, EventListener, EventSteps, FeatureChoice,
+                   RandomOutcome, StartOfTurnEvent)
 from spell import EldritchBlastBeam
 
 # Note: Reaction Spells like CounterSpell / Absorb Element / Shield are features
 
 @dataclass
-class Feature(EventListener):
+class Feature(EventListener, ABC):
     owner: Character
 
+
+class StartOfTurnFeature(Feature):
+    def outcomes(self, event: Event) -> list[RandomOutcome | FeatureChoice]:
+        return []
+
+    def apply_outcome(self, event: Event, outcome: Optional[RandomOutcome | FeatureChoice]) -> Optional[Event]:
+        if isinstance(event, StartOfTurnEvent) and event.event_step is EventSteps.BEFORE_EVENT:
+            self.owner.action = True
+            self.owner.bonus_action = True
+            self.owner.reaction = True
+            self.owner.interaction = True
 
 @dataclass
 class GeniesWrath(Feature):
@@ -40,9 +52,6 @@ class AgonizingBlast(Feature):
     """Eldritch Invocation p.110 of PHB
 
     When you cast eldritch blast, add your Charisma modifier to the damage it deals on hit
-
-    Args:
-        Feature (_type_): _description_
     """
     def outcomes(self, event: Event) -> list[RandomOutcome | FeatureChoice]:
         return []
@@ -54,5 +63,5 @@ class AgonizingBlast(Feature):
             return
         if event.origin_character != self.owner:
             return
-        event.attack_damage[DamageType.Force] += self.owner.attribute_modifier(Attribute.Charisma)
+        event.attack_damage.damages[DamageType.Force] += self.owner.attribute_modifier(Attribute.Charisma)
         return None
