@@ -1,26 +1,34 @@
 
-from character import Character
-from feature import Feature, AgonizingBlast
 from dataclasses import dataclass
-from attribute import Attribute
-from action import Action
-from spell import EldritchBlast
-from attack import Attack
+from typing import Optional
+
 import utils
+from action import Action, ActionCost, ActionSteps
+from attribute import Attribute
+from character import Character
+from event import ActionChoice
+from feature import AgonizingBlast, Feature
+from spell import EldritchBlast
+
 
 @dataclass
 class Build:
     character: Character
     features: list[Feature]
-    action: Action
-    bonus_action: Action = None
+    possible_actions: list[Action]
 
-    def use_action(self, target: Character) -> list[Attack]:
-        attacks = self.action.get_attacks(self.character, target)
-        for attack in attacks:
-            for feature in self.features:
-                feature.on_attack(attack)
-        return attacks
+    def available_actions(self) -> list[ActionChoice]:
+        available_actions = []
+        for i, action in enumerate(self.possible_actions):
+            action_choice = ActionChoice(action_index=i, target=None)
+            if action.action_cost is ActionCost.ACTION and self.character.action is True:
+                available_actions.append(action_choice)
+            elif action.action_cost is ActionCost.BONUS_ACTION and self.character.bonus_action is True:
+                available_actions.append(action_choice)
+            elif action.action_cost is ActionCost.NONE:
+                available_actions.append(action_choice)
+        return available_actions
+
 
 
 def get_the_genie_build(level: int) -> Build:
@@ -40,10 +48,10 @@ def get_the_genie_build(level: int) -> Build:
     build = Build(
         character,
         [],
-        action=EldritchBlast(spellcasting_ability=Attribute.Charisma)
+        possible_actions=[EldritchBlast(spellcasting_ability=Attribute.Charisma)]
     )
     for lvl in range(1, level+1):
         character.level = lvl
         if lvl == 2:
-            build.features.append(AgonizingBlast())
+            build.features.append(AgonizingBlast(owner=character))
     return build

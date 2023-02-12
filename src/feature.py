@@ -1,24 +1,20 @@
 
-from abc import ABC
-from attack import Attack
-from spell import EldritchBlast
-from attribute import Attribute
-from damage import DamageType
 from dataclasses import dataclass, field
+from typing import Optional
 
-class Feature(ABC):
+from action import ActionEffect
+from attribute import Attribute
+from character import Character
+from damage import DamageType
+from event import (Event, EventListener, EventTypes, FeatureChoice,
+                   RandomOutcome)
+from spell import EldritchBlastBeam
 
-    def on_start_of_turn(self) -> None:
-        pass
+# Note: Reaction Spells like CounterSpell / Absorb Element / Shield are features
 
-    def on_attack(self, attack: Attack) -> None:
-        pass
-
-    def on_hit(self, attack: Attack) -> None:
-        pass
-
-    def on_end_of_turn(self) -> None:
-        pass
+@dataclass
+class Feature(EventListener):
+    owner: Character
 
 
 @dataclass
@@ -29,15 +25,16 @@ class GeniesWrath(Feature):
     def on_start_of_turn(self):
         self.available = True
 
-    def on_hit(self, attack: Attack):
+    def on_hit(self, attack: ActionEffect):
         if self.available is False:
             return
         bonus_damage = attack.attacker.get_proficiency_bonus()
-        attack.damage.fix_damages.append((bonus_damage, self.damage_type))
+        attack.attack_damage.fix_damages.append((bonus_damage, self.damage_type))
         self.available = False
 
     def on_end_of_turn(self) -> None:
         self.available = False
+
 
 class AgonizingBlast(Feature):
     """Eldritch Invocation p.110 of PHB
@@ -47,7 +44,15 @@ class AgonizingBlast(Feature):
     Args:
         Feature (_type_): _description_
     """
-    def on_attack(self, attack: Attack):
-        if attack.action_type == EldritchBlast:
-            additional_damage = attack.attacker.get_attribute_modifier(Attribute.Charisma)
-            attack.damage.fix_damages.append((additional_damage, DamageType.Force))
+    def outcomes(self, event: Event) -> list[RandomOutcome | FeatureChoice]:
+        return []
+
+    def apply_outcome(self, event: Event, outcome: Optional[RandomOutcome | FeatureChoice]) -> Optional[Event]:
+        if not isinstance(event, ActionEffect):
+            return
+        if event.name != EldritchBlastBeam:
+            return
+        if event.origin_character != self.owner:
+            return
+        event.attack_damage[DamageType.Force] += self.owner.attribute_modifier(Attribute.Charisma)
+        return None

@@ -1,24 +1,46 @@
 
-from character import Character
-from build import get_the_genie_build
-from attribute import Attribute
-from damage import RolledDamage
 import logging
-import utils
 from fractions import Fraction
 
+import utils
+from attribute import Attribute
+from build import Build, get_the_genie_build
+from character import Character
+from event import ActionChoice
+from state import State
 
 
 def main():
-    the_genie = get_the_genie_build(5)
-    punching_ball = Character({attribute: 10 for attribute in Attribute})
-    n = 10000
-    total_rolled_damage = RolledDamage()
-    for i in range(n):
-        attacks = the_genie.use_action(punching_ball)
-        total_rolled_damage += sum((attack.roll() for attack in attacks), start=RolledDamage())
-    avg = Fraction(total_rolled_damage.get_sum(), n)
-    logging.debug(f'{round(float(avg), 2)}')
+    the_genie = get_the_genie_build(1)
+    punching_ball = Build(
+        character=Character({attribute: 10 for attribute in Attribute}),
+        features=[],
+        possible_actions=[]
+    )
+    state = State(
+        creatures=[the_genie, punching_ball],
+        event_queue=[],
+        current_turn_index=0
+    )
+
+    while True:
+        outcomes = state.outcomes()
+        for outcome in outcomes:
+            if isinstance(outcome, ActionChoice):
+                outcome.target = punching_ball.character
+        print(f'Possible outcomes are: {outcomes}')
+        index = int(input())
+        outcome = outcomes[index]
+        print(f'Chosen outcome is: {outcome}')
+        state.next(outcome)
+        state.forward_until_branch()
+        print(f'Total damage taken by the punching ball is: {punching_ball.character.total_damage_taken}')
+        print('\n')
+
+
+
+
+
 
 
 if __name__ == '__main__':
