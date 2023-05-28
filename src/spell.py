@@ -1,17 +1,25 @@
-
-import copy
-from abc import ABC, abstractmethod
+import logging
 from dataclasses import dataclass
-from typing import Any
 
-from action import Action, ActionCost, ActionEffect
+from action import ActionCost, ActionEvent, ActionModule
 from attribute import Attribute
 from character import Character
 from damage import Damage, DamageType
 from dices import DiceBag, Dices
 
 
-def cantrip_multiplier(caster_level: int) -> int:
+def cantrip_scaling(caster_level: int) -> int:
+    """Return the usual multiplier cantrip have that depends purely on total level and not class level
+
+    Args:
+        caster_level (int): Character level of the caster
+
+    Raises:
+        ValueError: When caster level is not between 1 and 20
+
+    Returns:
+        int: 1 to 4, depends on level
+    """
     if 1 <= caster_level <= 4:
         return 1
     if 5 <= caster_level <= 10:
@@ -28,15 +36,15 @@ def spell_attack_bonus(character: Character, attribute: Attribute) -> int:
 
 
 @dataclass(kw_only=True)
-class Spell(Action):
+class Spell(ActionModule):
     spellcasting_ability: Attribute
     level: int = 0
 
 
 class ProduceFlame(Spell):
-    def get_action_event(self, origin: Character, target: Character) -> 'ActionEffect':
-        dice_damages = [(Dices.d8, DamageType.Fire)] * cantrip_multiplier(origin.level)
-        return ActionEffect(
+    def get_action_event(self, origin: Character, target: Character) -> 'ActionEvent':
+        dice_damages = [(Dices.d8, DamageType.Fire)] * cantrip_scaling(origin.level)
+        return ActionEvent(
             origin=origin,
             target=target,
             is_an_attack=True,
@@ -51,11 +59,11 @@ class EldritchBlastBeam(Spell):
     action_cost: ActionCost = ActionCost.NONE
     number_of_uses: int
 
-    def get_action_event(self, origin: Character, target: Character) -> 'ActionEffect':
+    def get_action_event(self, origin: Character, target: Character) -> 'ActionEvent':
         if self.number_of_uses <= 0:
             raise ValueError
         self.number_of_uses -= 1
-        return ActionEffect(
+        return ActionEvent(
             origin_character=origin,
             target=target,
             is_an_attack=True,
@@ -70,8 +78,9 @@ class EldritchBlastBeam(Spell):
 class EldritchBlast(Spell):
     action_cost: ActionCost = ActionCost.ACTION
 
-    def get_action_event(self, origin: Character, target: Character) -> 'ActionEffect':
-        number_of_blast = 1 + cantrip_multiplier(origin.level)
+    def get_action_event(self, origin: Character, target: Character) -> 'ActionEvent':
+        number_of_blast = cantrip_scaling(origin.level)
+        logging.debug(f'number_of_blast={number_of_blast}')
         eldritch_blast_beam = EldritchBlastBeam(
             spellcasting_ability=self.spellcasting_ability,
             number_of_uses=number_of_blast
@@ -84,26 +93,26 @@ class EldritchBlast(Spell):
 
 
 class GreenFlameBladeSingleTarget(Spell):
-    def get_attacks(self, caster: Character, target: Character) -> list[ActionEffect]:
+    def get_attacks(self, caster: Character, target: Character) -> list[ActionEvent]:
         weapon_attack = caster.get_weapon_attack()
-        extra_dices = [(Dices.d8, DamageType.Fire)] * cantrip_multiplier(caster.level)
+        extra_dices = [(Dices.d8, DamageType.Fire)] * cantrip_scaling(caster.level)
         weapon_attack.damage.dice_damages.extend(extra_dices)
         return weapon_attack
 
 
 class GreenFlameBladeTwoTargets(Spell):
-    def get_attacks(self, caster: Character, target: Character) -> list[ActionEffect]:
+    def get_attacks(self, caster: Character, target: Character) -> list[ActionEvent]:
         weapon_attack = caster.get_weapon_attack()
-        extra_dices = [(Dices.d8, DamageType.Fire)] * cantrip_multiplier(caster.level) * 2
+        extra_dices = [(Dices.d8, DamageType.Fire)] * cantrip_scaling(caster.level) * 2
         weapon_attack.damage.dice_damages.extend(extra_dices)
         weapon_attack.damage.fix_damages.append((caster.attribute_modifier(self.spellcasting_ability), DamageType.Fire))
         return weapon_attack
 
 
 class MoonBeam(Spell):
-    def get_attacks(self, caster: Character, target: Character) -> list[ActionEffect]:
+    def get_attacks(self, caster: Character, target: Character) -> list[ActionEvent]:
         damage_rolls = [(Dices.d10, DamageType.Radiant)] * self.level
-        moonbeam = ActionEffect(
+        moonbeam = ActionEvent(
             is_an_attack=False,
             is_a_spell=True,
             attack_damage=Damage(dice_damages=damage_rolls),

@@ -1,6 +1,5 @@
-
 from enum import Enum, auto
-from dataclasses import dataclass
+
 
 class Attribute(str, Enum):
     Strength = auto()

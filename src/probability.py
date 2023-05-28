@@ -1,8 +1,7 @@
 
 from dataclasses import dataclass
 from fractions import Fraction
-from typing import TypeVar, Generic
-
+from typing import Generic, TypeVar
 
 T = TypeVar('T')
 

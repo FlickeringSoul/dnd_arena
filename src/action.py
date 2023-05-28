@@ -1,54 +1,36 @@
 import logging
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from dataclasses import dataclass, field
-from enum import Enum, auto
-from fractions import Fraction
-from typing import Optional
+from typing import Callable, Optional
 
+from action_cost import ActionCost
 from attribute import Attribute
 from character import Character
 from damage import Damage
-from dices import DiceBag, Dices
-from event import EndOfTurnEvent, Event, EventSteps, RandomOutcome
+from dices import DiceBag
+from event import Choice, Event, EventSteps, RandomOutcome
+from module import Module
 from probability import RandomVariable
 
 
-class ActionCost(Enum):
-    ACTION = auto()
-    BONUS_ACTION = auto()
-    REACTION = auto()
-    INTERACTION = auto()
-    NONE = auto()
-
-
-
 @dataclass(kw_only=True)
-class Action(ABC):
-    action_cost: ActionCost
-
-    @abstractmethod
-    def get_action_event(self, origin: Character, target: Character) -> 'Event':
-        pass
-
-
-@dataclass(kw_only=True)
-class ActionEffect(Event):
-    target: Character
+class ActionEvent(Event):
+    target: Optional[Character] = None # What about AoE and cells ? -> None mean we need to define target later
     is_an_attack: bool
     is_a_spell: bool
+    action_cost: ActionCost
     attack_damage: Damage
     attack_roll_modifiers: DiceBag = field(default_factory=DiceBag)
     saving_roll_modifiers: DiceBag = field(default_factory=DiceBag)
-    new_actions: list[Action] = field(default_factory=list)
     saving_throw_attribute: Attribute = None
     save_or_half: bool = False
     difficulty_class: int = None # Saving Throw DC
     name: type
+    on_action_selected_callback: Callable[[], None] = lambda: None
 
-
-    def outcomes(self) -> list[RandomOutcome]:
+    def get_possible_outcomes(self) -> list[RandomOutcome] | None:
         if self.event_step in [EventSteps.BEFORE_EVENT, EventSteps.AFTER_EVENT, EventSteps.FUMBLE, EventSteps.REGULAR_MISS, EventSteps.REGULAR_HIT, EventSteps.CRIT]:
-            return []
+            return None
         elif self.event_step is EventSteps.BEFORE_ATTACK:
             attack_roll_without_modifiers = RandomVariable.from_range(1, 20)
             fumble_outcome = RandomOutcome(
@@ -72,7 +54,7 @@ class ActionEffect(Event):
             return [fumble_outcome, crit_outcome, regular_hit_outcome, regular_miss_outcome]
         raise NotImplementedError(f'Not implemented for self.current_action_step={self.event_step}')
 
-    def apply_outcome(self, outcome: RandomOutcome) -> None:
+    def do_outcome(self, outcome: RandomOutcome) -> None:
         logging.debug(f'Calling apply outcome with outcome={outcome} and self.current_action_step={self.event_step}')
         next_step_dict = {
             EventSteps.BEFORE_EVENT: EventSteps.BEFORE_ATTACK,
@@ -84,6 +66,7 @@ class ActionEffect(Event):
             EventSteps.AFTER_EVENT: EventSteps.END
         }
         next_action_steps = next_step_dict[self.event_step]
+        self.event_processing_module_index = 0
         if self.event_step is EventSteps.BEFORE_ATTACK:
             assert(outcome.name in next_action_steps)
             self.event_step = outcome.name
@@ -97,20 +80,27 @@ class ActionEffect(Event):
         return
 
 
-@dataclass
-class EndOfTurnAction(Action):
-    action_cost: ActionCost = ActionCost.NONE
-
-    def get_action_event(self, origin: Character, target: Character) -> 'Event':
-        return EndOfTurnEvent(origin_character=origin)
+@dataclass(kw_only=True)
+class ChoosingActionEvent(Event):
+    possible_actions: list[Event] = field(init=False, default_factory=list) # Field will be filled by modules
 
 
-def get_weapon_attack(attacker: Character) -> ActionEffect:
-    return ActionEffect(
-        is_an_attack=True,
-        is_a_spell=False,
-        attack_damage=Damage(
-            dice_damages=[(dice, attacker.weapon.damage_type) for dice in attacker.weapon.damage_dices],
-            fix_damages=[(attacker.attribute_modifier(attacker.weapon.attribute), attacker.weapon.damage_type)]
-        )
-    )
+class ActionModule(Module):
+    @abstractmethod
+    def get_action_event(self) -> Event:
+        pass
+
+    def on_event(self, event: Event, chosen_outcome: RandomOutcome | Choice | None) -> Event | None:
+        if not isinstance(event, ChoosingActionEvent) or event.event_step != EventSteps.AFTER_EVENT or event.origin_character != self.origin_character:
+            return
+        possible_action = self.get_action_event()
+        if is_event_cost_available(possible_action):
+            event.possible_actions.append(self.get_action_event())
+
+def is_event_cost_available(event: Event) -> bool:
+    # EndOfTurn case
+    if not isinstance(event, ActionEvent):
+        return True
+    if event.action_cost is ActionCost.NONE:
+        return True
+    return event.origin_character.action_availability[event.action_cost]

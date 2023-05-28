@@ -1,6 +1,7 @@
 
 from dataclasses import dataclass, field
 
+from action_cost import ActionCost
 from attribute import Attribute
 from damage import Damage
 from weapon import Weapon
@@ -8,15 +9,15 @@ from weapon import Weapon
 
 @dataclass
 class Character:
+    name: str
     attributes: dict[Attribute, int]
+    action_availability: dict[ActionCost, bool] = field(init=False, default_factory=lambda: {action_cost: True for action_cost in ActionCost})
     level: int = None
     weapon: Weapon = None
     armor_class: int = 10
     total_damage_taken: Damage = field(default_factory=Damage)
-    action: bool = True
-    bonus_action: bool = True
-    reaction: bool = True
-    interaction: bool = True
+    current_spell_slots: list[int] = field(default_factory=lambda: [0]*8)
+    maximum_spell_slots: list[int] = field(default_factory=lambda: [0]*8)
 
     def takes_damage(self, damage: Damage):
         self.total_damage_taken += damage
