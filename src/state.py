@@ -4,8 +4,8 @@ from dataclasses import dataclass, field
 
 from action import ActionCost, ActionEvent, ChoosingActionEvent
 from character import Character
-from event import (Choice, EndOfTurnEvent, Event, EventSteps, RandomOutcome,
-                   StartOfTurnEvent)
+from event import (Choice, EndOfTurnEvent, Event, EventSteps, Outcome,
+                   RandomOutcome, StartOfTurnEvent)
 from module import Module
 
 
@@ -15,10 +15,17 @@ class State:
     modules: list[Module]
     event_queue: list[Event] = field(init=False, default_factory=list)
     current_turn_index: int = field(init=False, default=0)
+    round_number: int = field(init=False, default=1)
+    possibles_outcomes: list[Outcome] | None = field(init=False, default=None)
 
-    def next_turn_index(self) -> int:
+    def trigger_next_turn(self) -> None:
         # should rely on initiative score
-        return (self.current_turn_index + 1) % len(self.creatures)
+        self.current_turn_index = (self.current_turn_index + 1) % len(self.creatures)
+        self.event_queue.append(StartOfTurnEvent(
+            origin_character=self.current_turn_creature()
+        ))
+        if self.current_turn_index == 0:
+            self.round_number += 1
 
     def current_turn_creature(self) -> Character:
         return self.creatures[self.current_turn_index]
@@ -41,7 +48,11 @@ class State:
             return
         action_event.origin_character.action_availability[action_event.action_cost] = False
 
-    def possibles_outcomes(self) -> list[Choice] | list[RandomOutcome] | None:
+    def get_possibles_outcomes(self) -> list[Choice] | list[RandomOutcome] | None:
+        self.possibles_outcomes = self.__get_possibles_outcomes()
+        return self.possibles_outcomes
+
+    def __get_possibles_outcomes(self) -> list[Choice] | list[RandomOutcome] | None:
         # If there is no current event to process, launch a choosing action event
         if len(self.event_queue) == 0:
             self.event_queue.append(ChoosingActionEvent(
@@ -56,20 +67,20 @@ class State:
         if not isinstance(current_event, ChoosingActionEvent) or current_event.event_step is not EventSteps.AFTER_EVENT:
             return current_event.get_possible_outcomes()
         # If it is a ChoosingActionEvent, return all possibles action
-        # TODO: handle target here
         choices = []
         for possible_event in current_event.possible_actions:
             if isinstance(possible_event, ActionEvent):
                 for target in self.search_all_targets(action_event=possible_event):
                     possible_event_copy = copy.copy(possible_event)
                     possible_event_copy.target = target
-                    choices.append(Choice(choice=possible_event_copy))
+                    choices.append(Choice(choice=possible_event_copy, name=f'{possible_event.name.__name__} on {target.name}'))
             else:
-                choices.append(Choice(choice=possible_event))
+                choices.append(Choice(choice=possible_event, name=f'{possible_event.__class__.__name__}'))
         assert(len(choices) > 0)
         return choices
 
-    def do_outcome(self, outcome: Choice | RandomOutcome | None) -> None:
+    def do_outcome(self, outcome_index: int | None) -> None:
+        outcome = None if outcome_index is None else self.possibles_outcomes[outcome_index]
         # Process modules if there are module not processed yet
         current_event = self.current_event()
         current_module = self.current_event_module()
@@ -85,10 +96,7 @@ class State:
             self.event_queue.pop()
             if isinstance(current_event, EndOfTurnEvent):
                 assert(len(self.event_queue) == 0)
-                self.current_turn_index = self.next_turn_index()
-                self.event_queue.append(StartOfTurnEvent(
-                    origin_character=self.current_turn_creature()
-                ))
+                self.trigger_next_turn()
                 return
             if isinstance(current_event, ChoosingActionEvent):
                 assert(isinstance(outcome, Choice))
@@ -104,13 +112,20 @@ class State:
             f'Current module: {self.current_event_module().__class__.__name__}' +
             f'Current Character: {self.current_turn_creature().name}')
 
-    def forward_until_branch(self) -> list[Choice] | list[RandomOutcome]:
+    def forward_until_branch(self, relative_round_limit: int | None = None, absolute_round_limit: int | None = None) -> list[Choice] | list[RandomOutcome] | None:
+        if relative_round_limit is not None and absolute_round_limit is not None:
+            raise ValueError('Both limits cannot be given at the same time')
+        elif relative_round_limit is not None:
+            maximum_round = self.round_number + relative_round_limit
+        elif absolute_round_limit is not None:
+            maximum_round = absolute_round_limit + 1
+        else:
+            maximum_round = self.round_number + 10
+
         self.logging_progress()
-        possibles_outcomes = self.possibles_outcomes()
-        while possibles_outcomes is None:
+        while (possibles_outcomes := self.get_possibles_outcomes()) is None and self.round_number < maximum_round:
             self.do_outcome(None)
             self.logging_progress()
-            possibles_outcomes = self.possibles_outcomes()
         return possibles_outcomes
 
     def search_all_targets(self, action_event: ActionEvent) -> list[Character]:

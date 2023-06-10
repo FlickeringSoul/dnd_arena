@@ -15,12 +15,12 @@ class Character:
     level: int = None
     weapon: Weapon = None
     armor_class: int = 10
-    total_damage_taken: Damage = field(default_factory=Damage)
+    total_damage_taken: list[Damage] = field(default_factory=list)
     current_spell_slots: list[int] = field(default_factory=lambda: [0]*8)
     maximum_spell_slots: list[int] = field(default_factory=lambda: [0]*8)
 
     def takes_damage(self, damage: Damage):
-        self.total_damage_taken += damage
+        self.total_damage_taken.append(damage)
 
     def attribute_modifier(self, attribute: Attribute) -> int:
         return (self.attributes[attribute] - 10)//2

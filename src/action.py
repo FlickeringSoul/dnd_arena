@@ -98,9 +98,10 @@ class ActionModule(Module):
             event.possible_actions.append(self.get_action_event())
 
 def is_event_cost_available(event: Event) -> bool:
-    # EndOfTurn case
-    if not isinstance(event, ActionEvent):
-        return True
-    if event.action_cost is ActionCost.NONE:
-        return True
-    return event.origin_character.action_availability[event.action_cost]
+    match event:
+        case ActionEvent(action_cost=ActionCost.NONE):
+            return True
+        case ActionEvent():
+            return event.origin_character.action_availability[event.action_cost]
+        case _: # EndOfTurn case
+            return True

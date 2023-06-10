@@ -1,6 +1,7 @@
 
 from dataclasses import dataclass, field
 from enum import Enum, auto
+from fractions import Fraction
 
 from dices import DiceBag
 
@@ -39,3 +40,6 @@ class Damage:
                 fix=self.damages[damage_type].fix
             )
         return Damage(result_damage_dict)
+
+    def avg(self) -> Fraction:
+        return sum(dice_bag.avg() for dice_bag in self.damages.values())

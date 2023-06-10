@@ -8,13 +8,17 @@ from character import Character
 
 
 @dataclass
-class RandomOutcome:
-    probability: Fraction
-    name: Enum
+class Outcome:
+    name: str
 
 
 @dataclass
-class Choice:
+class RandomOutcome(Outcome):
+    probability: Fraction
+
+
+@dataclass
+class Choice(Outcome):
     choice: Any
 
 

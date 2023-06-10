@@ -108,8 +108,25 @@ how to take this into account
 AI should not know in advance resistances, HP, enemies abilities and so on
 How to take it into account ?
 
--> ennemie model should be evolutive depending on what we saw
+-> enemy model should be evolutive depending on what we saw
 before knowing, it could be either default value of probability
 -> fire res probability = 10%
 -> invisible character has equal probabilities of being where it can ? that's not true but how to predict ?
--> going invisible somewhere may be stategic -> using invisibility mean anticipating how ennemies will react to it
+-> going invisible somewhere may be strategic -> using invisibility mean anticipating how ennemies will react to it
+
+---
+
+# How to compute average DPR of a build ?
+
+According to (rpg.stackexchange)[https://rpg.stackexchange.com/questions/200182/is-there-any-estimate-of-average-damage-output-per-turn-for-pcs-by-level]
+a fight is around 4 rounds, so we could take the avg in 4 rounds
+
+---
+
+# How to compare builds ?
+
+There is the avg DPT dealt, DPT received but also their variance.
+A polyvalent build can deal with more monster variety
+
+But what about team work ? Blessing spell is strong but not alone
+Bonuses to other should not be overlooked
