@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass, field
 
 from action import ActionEvent
@@ -12,7 +13,7 @@ class GeniesWrath(Module):
     damage_type: DamageType
     available: bool = field(default=False, init=False)
 
-    def on_event(self, event: Event, choice: RandomOutcome | Choice | None) -> Event | None:
+    def on_event(self, event: Event, chosen_outcome: RandomOutcome | Choice | None) -> Event | None:
         if event.origin_character != self.origin_character:
             return
         if isinstance(event, StartOfTurnEvent):
@@ -27,14 +28,17 @@ class GeniesWrath(Module):
             self.on_hit(event)
 
     def on_start_of_turn(self):
+        logging.debug('XXX START')
         self.available = True
 
     def on_hit(self, attack: ActionEvent):
+        logging.debug(f'XXX {self.available=}')
         if self.available is False:
             return
         bonus_damage = attack.origin_character.proficiency_bonus()
-        attack.attack_damage.damages[self.damage_type] += bonus_damage
+        attack.attack_damage[self.damage_type] += bonus_damage
         self.available = False
 
     def on_end_of_turn(self) -> None:
+        logging.debug('XXX END')
         self.available = False

@@ -3,8 +3,10 @@
 from attribute import Attribute
 from build import Build
 from character import Character
+from damage import DamageType
 from warlock.agonizing_blast import AgonizingBlast
 from warlock.eldritch_blast import EldritchBlast
+from warlock.genies_wrath import GeniesWrath
 
 
 def get_the_genie_build(level: int) -> Build:
@@ -27,6 +29,10 @@ def get_the_genie_build(level: int) -> Build:
         modules=[EldritchBlast(
         origin_character=character,
         spell_casting_ability=Attribute.Charisma
+        ),
+        GeniesWrath(
+            damage_type=DamageType.MagicalBludgeoning,
+            origin_character=character
         )]
     )
     for lvl in range(1, level+1):

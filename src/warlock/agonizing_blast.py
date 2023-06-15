@@ -21,5 +21,5 @@ class AgonizingBlast(Module):
             return
         if event.origin_character != self.origin_character:
             return
-        event.attack_damage.damages[DamageType.Force] += self.origin_character.attribute_modifier(Attribute.Charisma)
+        event.attack_damage[DamageType.Force] += self.origin_character.attribute_modifier(Attribute.Charisma)
         return

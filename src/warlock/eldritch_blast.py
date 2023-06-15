@@ -30,9 +30,7 @@ class EldritchBlast(ActionModule):
             is_an_attack=True,
             is_a_spell=True,
             action_cost=cost,
-            attack_damage=Damage(
-            damages={DamageType.Force: DiceBag() + Dices.d10}
-            ),
+            attack_damage=Damage().add(DamageType.Force, Dices.d10),
             attack_roll_modifiers=DiceBag() + spell_attack_bonus(self.origin_character, self.spell_casting_ability),
             name=EldritchBlast,
             on_action_selected_callback=self.on_action_use_callback

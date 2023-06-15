@@ -43,13 +43,15 @@ class Spell(ActionModule):
 
 class ProduceFlame(Spell):
     def get_action_event(self, origin: Character, target: Character) -> 'ActionEvent':
-        dice_damages = [(Dices.d8, DamageType.Fire)] * cantrip_scaling(origin.level)
+        spell_damage = Damage()
+        for _ in cantrip_scaling(origin.level):
+            spell_damage[DamageType.Fire] += Dices.d8
         return ActionEvent(
             origin=origin,
             target=target,
             is_an_attack=True,
             is_a_spell=True,
-            attack_damage=Damage(dice_damages=dice_damages),
+            attack_damage=spell_damage,
             attack_roll_modifiers=spell_attack_bonus(origin, self.spellcasting_ability)
         )
 
@@ -63,12 +65,14 @@ class EldritchBlastBeam(Spell):
         if self.number_of_uses <= 0:
             raise ValueError
         self.number_of_uses -= 1
+        attack_damage = Damage()
+        attack_damage[DamageType.Force] += Dices.d10
         return ActionEvent(
             origin_character=origin,
             target=target,
             is_an_attack=True,
             is_a_spell=True,
-            attack_damage=Damage({DamageType.Force: DiceBag() + Dices.d10}),
+            attack_damage=attack_damage,
             attack_roll_modifiers=DiceBag() + spell_attack_bonus(origin, self.spellcasting_ability),
             name=self.__class__
         )

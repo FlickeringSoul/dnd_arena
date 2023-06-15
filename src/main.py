@@ -7,7 +7,7 @@ import utils
 from action import ActionEvent
 from attribute import Attribute
 from character import Character
-from event import Choice, Outcome
+from event import Choice, Outcome, StartOfTurnEvent
 from feature import EndOfTurnAction, StartOfTurnFeature
 from state import State
 from tree import TreeNode, find_best_strategy
@@ -24,6 +24,9 @@ def get_test_state():
         creatures=[the_genie.character, punching_ball],
         modules=the_genie.modules + [EndOfTurnAction(), StartOfTurnFeature()]
     )
+    state.event_queue.append(
+        StartOfTurnEvent(origin_character=the_genie.character)
+    )
     return state
 
 
@@ -32,7 +35,9 @@ def test_interactive_arena():
     while True:
         possibles_outcomes = state.forward_until_branch()
         print(f'Total damage taken by the punching ball is: {state.creatures[1].total_damage_taken}')
-        print(f'Possible outcomes are: {[display_outcome(outcome) for outcome in possibles_outcomes]}')
+        print('Possible outcomes are:')
+        for i, outcome in enumerate(possibles_outcomes):
+            print(f'{i}: {display_outcome(outcome)}')
         index = int(input())
         outcome = possibles_outcomes[index]
         print(f'Chosen outcome is: {display_outcome(outcome)}')
@@ -70,12 +75,6 @@ def test_tree():
             to_do.append(child_node)
     root_node.print_full_tree()
     print(find_best_strategy(root_node))
-
-
-
-
-
-
 
 
 if __name__ == '__main__':
