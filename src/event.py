@@ -2,27 +2,25 @@ from abc import ABC
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from fractions import Fraction
-from typing import Any
 
 from character import Character
 
 
 @dataclass
-class Outcome:
-    name: str
-
-
-@dataclass
-class RandomOutcome(Outcome):
+class RandomOutcome:
+    name: 'EventSteps'
     probability: Fraction
 
 
 @dataclass
-class Choice(Outcome):
-    choice: Any
+class Choice:
+    name: str
+    choice: 'Event'
+
+Outcome = RandomOutcome | Choice
 
 
-class EventSteps(Enum):
+class EventSteps(str, Enum):
     BEFORE_EVENT = auto() # Counter spell
 
     BEFORE_ATTACK = auto()
@@ -52,7 +50,7 @@ class Event(ABC):
     def get_possible_outcomes(self) -> list[RandomOutcome] | None:
         return None
 
-    def do_outcome(self, outcome: RandomOutcome) -> None:
+    def do_outcome(self, outcome: RandomOutcome | Choice | None) -> None:
         next_step_dict = {
             EventSteps.BEFORE_EVENT: EventSteps.AFTER_EVENT,
             EventSteps.AFTER_EVENT: EventSteps.END

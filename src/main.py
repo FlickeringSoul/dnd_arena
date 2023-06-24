@@ -48,9 +48,10 @@ def test_interactive_arena():
 def display_outcome(outcome: Outcome) -> str:
     if isinstance(outcome, Choice):
         if isinstance(outcome.choice, ActionEvent):
+            assert outcome.choice.target is not None
             return f'{outcome.choice.name.__name__} -> {outcome.choice.target.name}'
         return outcome.choice.__class__.__name__
-    return outcome
+    return str(outcome)
 
 
 def test_tree():
@@ -74,7 +75,10 @@ def test_tree():
             node.children.append(child_node)
             to_do.append(child_node)
     root_node.print_full_tree()
-    print(find_best_strategy(root_node))
+    best_strategy = find_best_strategy(root_node)
+    print(best_strategy)
+    print('\n\n')
+    print(utils.repr_history(best_strategy.scores['Genius Warlock'].history))
 
 
 if __name__ == '__main__':

@@ -22,13 +22,14 @@ class ActionEvent(Event):
     attack_damage: Damage
     attack_roll_modifiers: DiceBag = field(default_factory=DiceBag)
     saving_roll_modifiers: DiceBag = field(default_factory=DiceBag)
-    saving_throw_attribute: Attribute = None
+    saving_throw_attribute: Attribute | None = None
     save_or_half: bool = False
-    difficulty_class: int = None # Saving Throw DC
+    difficulty_class: int | None = None # Saving Throw DC
     name: type
     on_action_selected_callback: Callable[[], None] = lambda: None
 
     def get_possible_outcomes(self) -> list[RandomOutcome] | None:
+        assert self.target is not None
         if self.event_step in [EventSteps.BEFORE_EVENT, EventSteps.AFTER_EVENT, EventSteps.FUMBLE, EventSteps.REGULAR_MISS, EventSteps.REGULAR_HIT, EventSteps.CRIT]:
             return None
         elif self.event_step is EventSteps.BEFORE_ATTACK:
@@ -54,9 +55,9 @@ class ActionEvent(Event):
             return [fumble_outcome, crit_outcome, regular_hit_outcome, regular_miss_outcome]
         raise NotImplementedError(f'Not implemented for self.current_action_step={self.event_step}')
 
-    def do_outcome(self, outcome: RandomOutcome) -> None:
+    def do_outcome(self, outcome: RandomOutcome | Choice | None) -> None:
         logging.debug(f'Calling apply outcome with outcome={outcome} and self.current_action_step={self.event_step}')
-        next_step_dict = {
+        next_step_dict: dict[EventSteps, EventSteps | list[EventSteps]] = {
             EventSteps.BEFORE_EVENT: EventSteps.BEFORE_ATTACK,
             EventSteps.BEFORE_ATTACK: [EventSteps.REGULAR_HIT, EventSteps.REGULAR_MISS, EventSteps.FUMBLE, EventSteps.CRIT],
             EventSteps.FUMBLE: EventSteps.AFTER_EVENT,
@@ -68,12 +69,15 @@ class ActionEvent(Event):
         next_action_steps = next_step_dict[self.event_step]
         self.event_processing_module_index = 0
         if self.event_step is EventSteps.BEFORE_ATTACK:
-            assert(outcome.name in next_action_steps)
+            assert isinstance(outcome, RandomOutcome)
+            assert outcome.name in next_action_steps
             self.event_step = outcome.name
         else:
             assert(outcome is None)
             if self.event_step in [EventSteps.REGULAR_HIT, EventSteps.CRIT]:
+                assert self.target is not None
                 self.target.takes_damage(self.attack_damage)
+            assert isinstance(next_action_steps, EventSteps)
             self.event_step = next_action_steps
         if self.event_step is EventSteps.CRIT:
             self.attack_damage = self.attack_damage.as_critical()
@@ -92,10 +96,11 @@ class ActionModule(Module):
 
     def on_event(self, event: Event, chosen_outcome: RandomOutcome | Choice | None) -> Event | None:
         if not isinstance(event, ChoosingActionEvent) or event.event_step != EventSteps.AFTER_EVENT or event.origin_character != self.origin_character:
-            return
+            return None
         possible_action = self.get_action_event()
         if is_event_cost_available(possible_action):
             event.possible_actions.append(self.get_action_event())
+        return None
 
 def is_event_cost_available(event: Event) -> bool:
     match event:

@@ -15,17 +15,18 @@ class GeniesWrath(Module):
 
     def on_event(self, event: Event, chosen_outcome: RandomOutcome | Choice | None) -> Event | None:
         if event.origin_character != self.origin_character:
-            return
+            return None
         if isinstance(event, StartOfTurnEvent):
             self.on_start_of_turn()
-            return
+            return None
         if isinstance(event, EndOfTurnEvent):
             self.on_end_of_turn()
-            return
+            return None
         if not isinstance(event, ActionEvent):
-            return
+            return None
         if event.event_step in (EventSteps.REGULAR_HIT, EventSteps.CRIT):
             self.on_hit(event)
+        return None
 
     def on_start_of_turn(self):
         logging.debug('XXX START')

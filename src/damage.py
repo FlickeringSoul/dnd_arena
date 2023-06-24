@@ -55,4 +55,7 @@ class Damage:
         return result_damage
 
     def avg(self) -> Fraction:
-        return sum(dice_bag.avg() for dice_bag in self.__damages.values())
+        return sum(
+            (dice_bag.avg() for dice_bag in self.__damages.values()),
+            start=Fraction()
+        )

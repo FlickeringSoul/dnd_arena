@@ -25,9 +25,12 @@ class DiceBag:
     fix: int = 0
 
     def avg(self) -> Fraction:
-        return sum(value * probability for value, probability in self.as_random_variable().outcomes.items())
+        return sum(
+            (value * probability for value, probability in self.as_random_variable().outcomes.items()),
+            start=Fraction()
+        )
 
-    def as_random_variable(self) -> RandomVariable[int]:
+    def as_random_variable(self) -> RandomVariable:
         """
         TODO: some variables cannot be negatives and must be fixed
         """

@@ -14,12 +14,12 @@ class AgonizingBlast(Module):
     """
     def on_event(self, event: Event, chosen_outcome: RandomOutcome | Choice | None) -> Event | None:
         if not isinstance(event, ActionEvent):
-            return
+            return None
         if event.event_step is not EventSteps.CRIT and event.event_step is not EventSteps.REGULAR_HIT:
-            return
+            return None
         if event.name != EldritchBlast:
-            return
+            return None
         if event.origin_character != self.origin_character:
-            return
+            return None
         event.attack_damage[DamageType.Force] += self.origin_character.attribute_modifier(Attribute.Charisma)
-        return
+        return None

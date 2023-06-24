@@ -13,9 +13,11 @@ class StartOfTurnFeature(Module):
     def on_event(self, event: Event, chosen_outcome: RandomOutcome | Choice | None) -> Event | None:
         if isinstance(event, StartOfTurnEvent) and event.event_step is EventSteps.BEFORE_EVENT:
             event.origin_character.action_availability = {action_cost: True for action_cost in ActionCost if action_cost is not ActionCost.NONE}
+        return None
 
 class EndOfTurnAction(Module):
     def on_event(self, event: Event, chosen_outcome: RandomOutcome | Choice | None) -> Event | None:
         if not isinstance(event, ChoosingActionEvent) or event.event_step != EventSteps.AFTER_EVENT:
-            return
+            return None
         event.possible_actions.append(EndOfTurnEvent(origin_character=event.origin_character))
+        return None

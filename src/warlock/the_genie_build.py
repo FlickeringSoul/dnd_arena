@@ -28,7 +28,7 @@ def get_the_genie_build(level: int) -> Build:
         character,
         modules=[EldritchBlast(
         origin_character=character,
-        spell_casting_ability=Attribute.Charisma
+        spellcasting_ability=Attribute.Charisma
         ),
         GeniesWrath(
             damage_type=DamageType.MagicalBludgeoning,
