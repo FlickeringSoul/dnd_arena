@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from character import Character
 from module import Module
@@ -6,5 +6,5 @@ from module import Module
 
 @dataclass
 class Build:
-    character: Character
-    modules: list[Module]
+    characters: list[Character] = field(default_factory=list)
+    modules: list[Module] = field(default_factory=list)

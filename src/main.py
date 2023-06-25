@@ -4,33 +4,14 @@ import copy
 
 import utils
 from action import ActionEvent
-from attribute import Attribute
-from build import Build
-from character import Character
-from event import Choice, Outcome, StartOfTurnEvent
-from feature import EndOfTurnAction, StartOfTurnFeature
+from event import Choice, Outcome
+from factory import TheGenie
 from state import State
 from tree import TreeNode, find_best_strategy
-from warlock.the_genie_build import get_the_genie_build
-
-
-def get_test_state(build: Build):
-    punching_ball = Character(
-        name='punching_ball',
-        attributes={attribute: 10 for attribute in Attribute}
-    )
-    state = State(
-        creatures=[build.character, punching_ball],
-        modules=build.modules + [EndOfTurnAction(), StartOfTurnFeature()]
-    )
-    state.event_queue.append(
-        StartOfTurnEvent(origin_character=build.character)
-    )
-    return state
 
 
 def test_interactive_arena():
-    state = get_test_state()
+    state = TheGenie(level=1).get_test_state()
     while True:
         possibles_outcomes = state.forward_until_branch()
         print(f'Total damage taken by the punching ball is: {state.creatures[1].total_damage_taken}')
