@@ -1,3 +1,11 @@
+# 0.4.0
+
+- Improve Damage computation and display
+- Add Genies Wrath
+- Use mypy to check typing
+- Add tests with pytest
+- Add TODO list
+
 # 0.3.0
 
 - Add simple tree of possibility support
