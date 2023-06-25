@@ -59,17 +59,6 @@ class Event(ABC):
         self.event_processing_module_index = 0
 
 
-'''
-class EventTypes(Enum):
-    END_OF_TURN = auto()
-    START_OF_TURN = auto()
-    ACTION_EFFECT = auto()
-    MOVE = auto()
-    LEVEL_UP = auto()
-    SWITCHING_WEAPON = auto()
-'''
-
-
 class EndOfTurnEvent(Event):
     pass
 

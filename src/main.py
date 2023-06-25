@@ -1,11 +1,11 @@
 
 
 import copy
-import logging
 
 import utils
 from action import ActionEvent
 from attribute import Attribute
+from build import Build
 from character import Character
 from event import Choice, Outcome, StartOfTurnEvent
 from feature import EndOfTurnAction, StartOfTurnFeature
@@ -14,18 +14,17 @@ from tree import TreeNode, find_best_strategy
 from warlock.the_genie_build import get_the_genie_build
 
 
-def get_test_state():
-    the_genie = get_the_genie_build(5) # Todo, fix the number of blast
+def get_test_state(build: Build):
     punching_ball = Character(
-        name='Punching Ball',
+        name='punching_ball',
         attributes={attribute: 10 for attribute in Attribute}
     )
     state = State(
-        creatures=[the_genie.character, punching_ball],
-        modules=the_genie.modules + [EndOfTurnAction(), StartOfTurnFeature()]
+        creatures=[build.character, punching_ball],
+        modules=build.modules + [EndOfTurnAction(), StartOfTurnFeature()]
     )
     state.event_queue.append(
-        StartOfTurnEvent(origin_character=the_genie.character)
+        StartOfTurnEvent(origin_character=build.character)
     )
     return state
 
@@ -54,13 +53,11 @@ def display_outcome(outcome: Outcome) -> str:
     return str(outcome)
 
 
-def test_tree():
-    root_node = TreeNode(state=get_test_state())
+def exhaust_tree(state: State) -> TreeNode:
+    root_node = TreeNode(state)
     to_do = [root_node]
     while len(to_do) > 0:
         node = to_do.pop(0)
-        node.print_history_tree()
-        logging.debug(f'round_number {node.state.round_number}')
         possible_outcomes = node.state.forward_until_branch(absolute_round_limit=1)
         if possible_outcomes is None:
             continue # reached maximum rounds
@@ -74,6 +71,10 @@ def test_tree():
             )
             node.children.append(child_node)
             to_do.append(child_node)
+    return root_node
+
+def test_tree():
+    root_node = exhaust_tree(get_test_state(get_the_genie_build(1)))
     root_node.print_full_tree()
     best_strategy = find_best_strategy(root_node)
     print(best_strategy)

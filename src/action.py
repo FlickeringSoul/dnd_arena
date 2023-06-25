@@ -73,7 +73,7 @@ class ActionEvent(Event):
             assert outcome.name in next_action_steps
             self.event_step = outcome.name
         else:
-            assert(outcome is None)
+            assert outcome is None
             if self.event_step in [EventSteps.REGULAR_HIT, EventSteps.CRIT]:
                 assert self.target is not None
                 self.target.takes_damage(self.attack_damage)

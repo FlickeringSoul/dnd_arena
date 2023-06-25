@@ -46,10 +46,8 @@ def avg_total_damage_taken(tot_dmg_taken: list[Damage]) -> ExplainedValue:
         history=HistoryAddition(values=[f'avg({dmg})' for dmg in tot_dmg_taken])
     )
 
-def avg_dmg_dealt_scoring(creature_id: str, state: State) -> ExplainedValue:
-    nemesis = {'Punching Ball': 'Genius Warlock', 'Genius Warlock': 'Punching Ball'}
-    enemy_id = nemesis[creature_id]
-    enemy_dmg_taken = get_creature_from_id(enemy_id, state).total_damage_taken
+def avg_dmg_dealt_to_punching_ball_scoring(creature_id: str, state: State) -> ExplainedValue:
+    enemy_dmg_taken = get_creature_from_id('punching_ball', state).total_damage_taken
     return avg_total_damage_taken(enemy_dmg_taken)
 
 
@@ -68,7 +66,7 @@ def find_best_strategy(node: TreeNode) -> Strategy:
         return Strategy(
             choices=[],
             scores={
-                creature.name: avg_dmg_dealt_scoring(creature.name, node.state)
+                creature.name: avg_dmg_dealt_to_punching_ball_scoring(creature.name, node.state)
                 for creature in node.state.creatures
             }
         )
@@ -81,7 +79,7 @@ def find_best_strategy(node: TreeNode) -> Strategy:
                 random_outcome = cast(RandomOutcome, child.outcome)
                 factor = ExplainedValue(
                     value=random_outcome.probability,
-                    history=f'{random_outcome.probability} ({random_outcome.name})',
+                    history=f'{random_outcome.probability} ({random_outcome.name.name})',
                 )
                 scores[creature_id] +=  factor * creature_score
         # TODO Choices can be different for some random outcomes !!

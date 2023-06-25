@@ -1,5 +1,3 @@
-
-
 from attribute import Attribute
 from build import Build
 from character import Character

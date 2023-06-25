@@ -104,12 +104,12 @@ class State:
         if current_event.event_step is EventSteps.END:
             self.event_queue.pop()
             if isinstance(current_event, EndOfTurnEvent):
-                assert(len(self.event_queue) == 0)
+                assert len(self.event_queue) == 0
                 self.trigger_next_turn()
                 return
             if isinstance(current_event, ChoosingActionEvent):
-                assert(isinstance(outcome, Choice))
-                assert(isinstance(outcome.choice, Event))
+                assert isinstance(outcome, Choice)
+                assert isinstance(outcome.choice, Event)
                 self.event_queue.append(outcome.choice)
                 if isinstance(outcome.choice, ActionEvent):
                     self.apply_action_event_cost(outcome.choice)

@@ -24,7 +24,7 @@ class RandomVariable:
 
     @staticmethod
     def from_range(start_included: int, end_included: int):
-        return RandomVariable.from_values([i for i in range(start_included, end_included + 1)])
+        return RandomVariable.from_values(list(range(start_included, end_included + 1)))
 
     @staticmethod
     def from_values(values: list[int]) -> 'RandomVariable':
@@ -39,7 +39,7 @@ class RandomVariable:
         return RandomVariable(outcomes)
 
     def __post_init__(self):
-        assert(sum(self.outcomes.values()) == 1)
+        assert sum(self.outcomes.values()) == 1
 
     def __add__(self, other: 'RandomVariable | int') -> 'RandomVariable':
         if isinstance(other, int):

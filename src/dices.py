@@ -35,26 +35,27 @@ class DiceBag:
         TODO: some variables cannot be negatives and must be fixed
         """
         result = RandomVariable.from_values([self.fix])
-        for is_positive, dice in self.dices:
-            if is_positive:
-                result = result + dice.as_random_variable()
-            else:
-                result = result - dice.as_random_variable()
+        for (is_positive, dice), count in self.dices.items():
+            for _ in range(count):
+                if is_positive:
+                    result = result + dice.as_random_variable()
+                else:
+                    result = result - dice.as_random_variable()
         return result
 
     @staticmethod
-    def cast_to_dice_bag(object: int | Dices) -> 'DiceBag':
-        match object:
+    def cast_to_dice_bag(obj: int | Dices) -> 'DiceBag':
+        match obj:
             case Dices():
                 return DiceBag(
-                    dices={(True, object): 1}
+                    dices={(True, obj): 1}
                 )
             case int():
                 return DiceBag(
-                    fix=object
+                    fix=obj
                 )
             case _:
-                raise TypeError(f'object should be either a int or a Dices not a {type(object)}')
+                raise TypeError(f'object should be either a int or a Dices not a {type(obj)}')
 
     def __add__(self, other: 'DiceBag | int | Dices') -> 'DiceBag':
         if not isinstance(other, DiceBag):
