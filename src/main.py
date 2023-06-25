@@ -1,19 +1,18 @@
-
-
 import copy
 
 import utils
 from action import ActionEvent
-from event import Choice, Outcome
+from event import Choice, RandomOutcome
 from factory import TheGenie
 from state import State
 from tree import TreeNode, find_best_strategy
 
 
-def test_interactive_arena():
+def test_interactive_arena() -> None:
     state = TheGenie(level=1).get_test_state()
     while True:
         possibles_outcomes = state.forward_until_branch()
+        assert possibles_outcomes is not None
         print(f'Total damage taken by the punching ball is: {state.creatures[1].total_damage_taken}')
         print('Possible outcomes are:')
         for i, outcome in enumerate(possibles_outcomes):
@@ -25,7 +24,7 @@ def test_interactive_arena():
         print('\n')
 
 
-def display_outcome(outcome: Outcome) -> str:
+def display_outcome(outcome: RandomOutcome | Choice) -> str:
     if isinstance(outcome, Choice):
         if isinstance(outcome.choice, ActionEvent):
             assert outcome.choice.target is not None
@@ -54,8 +53,10 @@ def exhaust_tree(state: State) -> TreeNode:
             to_do.append(child_node)
     return root_node
 
-def test_tree():
-    root_node = exhaust_tree(get_test_state(get_the_genie_build(1)))
+
+def test_tree() -> None:
+    state = TheGenie(1).get_test_state()
+    root_node = exhaust_tree(state)
     root_node.print_full_tree()
     best_strategy = find_best_strategy(root_node)
     print(best_strategy)

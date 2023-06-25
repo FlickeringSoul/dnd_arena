@@ -23,7 +23,7 @@ class RandomVariable:
         return result_probability
 
     @staticmethod
-    def from_range(start_included: int, end_included: int):
+    def from_range(start_included: int, end_included: int) -> 'RandomVariable':
         return RandomVariable.from_values(list(range(start_included, end_included + 1)))
 
     @staticmethod
@@ -38,7 +38,7 @@ class RandomVariable:
             outcomes[value] += Fraction(1, n)
         return RandomVariable(outcomes)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         assert sum(self.outcomes.values()) == 1
 
     def __add__(self, other: 'RandomVariable | int') -> 'RandomVariable':

@@ -3,17 +3,18 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from fractions import Fraction
+from typing import Any, Callable
 
 
-def config_logging():
+def config_logging() -> None:
     handler = logging.StreamHandler()
     logger = logging.getLogger()
     logger.addHandler(handler)
     logger.setLevel(logging.DEBUG)
 
 
-def debug_decorator(function):
-    def wrapped_function(*args, **kwargs):
+def debug_decorator(function: Callable) -> Callable:
+    def wrapped_function(*args: list[Any], **kwargs: dict[str, Any]) -> Any:
         logging.debug(f'Function {function.__name__} called with args={args} and kwargs={kwargs}')
         res = function(*args, **kwargs)
         logging.debug(f'Function {function.__name__} returned with value = {res}')

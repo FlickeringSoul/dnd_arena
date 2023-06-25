@@ -11,6 +11,7 @@ from dices import DiceBag
 from event import Choice, Event, EventSteps, RandomOutcome
 from module import Module
 from probability import RandomVariable
+from weapon import Weapon
 
 
 @dataclass(kw_only=True)
@@ -27,6 +28,7 @@ class ActionEvent(Event):
     difficulty_class: int | None = None # Saving Throw DC
     name: type
     on_action_selected_callback: Callable[[], None] = lambda: None
+    weapon_used: Weapon | None = None
 
     def get_possible_outcomes(self) -> list[RandomOutcome] | None:
         assert self.target is not None

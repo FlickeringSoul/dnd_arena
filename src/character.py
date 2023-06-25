@@ -19,7 +19,7 @@ class Character:
     current_spell_slots: list[int] = field(default_factory=lambda: [0]*8)
     maximum_spell_slots: list[int] = field(default_factory=lambda: [0]*8)
 
-    def takes_damage(self, damage: Damage):
+    def takes_damage(self, damage: Damage) -> None:
         self.total_damage_taken.append(damage)
 
     def attribute_modifier(self, attribute: Attribute) -> int:

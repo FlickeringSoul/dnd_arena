@@ -1,4 +1,3 @@
-import logging
 from dataclasses import dataclass, field
 
 from action import ActionEvent
@@ -28,12 +27,10 @@ class GeniesWrath(Module):
             self.on_hit(event)
         return None
 
-    def on_start_of_turn(self):
-        logging.debug('XXX START')
+    def on_start_of_turn(self) -> None:
         self.available = True
 
-    def on_hit(self, attack: ActionEvent):
-        logging.debug(f'XXX {self.available=}')
+    def on_hit(self, attack: ActionEvent) -> None:
         if self.available is False:
             return
         bonus_damage = attack.origin_character.proficiency_bonus()
@@ -41,5 +38,4 @@ class GeniesWrath(Module):
         self.available = False
 
     def on_end_of_turn(self) -> None:
-        logging.debug('XXX END')
         self.available = False

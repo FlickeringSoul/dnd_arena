@@ -17,8 +17,6 @@ class Choice:
     name: str
     choice: 'Event'
 
-Outcome = RandomOutcome | Choice
-
 
 class EventSteps(str, Enum):
     BEFORE_EVENT = auto() # Counter spell

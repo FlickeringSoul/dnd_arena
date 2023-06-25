@@ -23,7 +23,7 @@ STARTING_ATTRIBUTE_COST = {
     15: 9
 }
 
-def verify_starting_attributes(starting_attributes: dict[Attribute, int]):
+def verify_starting_attributes(starting_attributes: dict[Attribute, int]) -> None:
     '''
     Check if given set of attributes respect rules
     '''

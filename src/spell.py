@@ -15,7 +15,7 @@ class Spell(ActionModule):
         attr_bonus = self.origin_character.attribute_modifier(self.spellcasting_ability)
         return pb + attr_bonus
 
-    def cantrip_multiplier(self):
+    def cantrip_multiplier(self) -> int:
         """Return the usual multiplier cantrip have that depends purely on total level and not class level
 
         Args:
@@ -27,6 +27,7 @@ class Spell(ActionModule):
         Returns:
             int: 1 to 4, depends on level
         """
+        assert self.origin_character is not None and self.origin_character.level is not None
         caster_level = self.origin_character.level
         if 1 <= caster_level <= 4:
             return 1

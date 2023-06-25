@@ -4,6 +4,7 @@
 * Implement halfling rogue to have a basic build comparison
 * Implement summon undead (skeleton) -> group -> better vision for the genie build
 * Implement pact of the chain -> familiar conditional attack
+* Take into account darkness strategy for low level warlock
 * Implement zeolot barbarian
 * Implement Battle Smith Artificier
 * Implement Wildfire Druid
@@ -16,13 +17,19 @@
 * * Compute percentage of maxlife dealt -> much better than raw damage
 * * Cap max damage of a single hit at 150% of max life to favorize robust play style
 
-# AI / Tree search improvements
+# Tree search improvements
+
+* Compute avrg on 4 first turns
+* Regroup same states in one
+
+# AI
 
 * Value potential mistake from adversary
 * Act on unknown -> learner, potential resistances, ...
 * * Allow each character to have a model for adversary
-* Regroup same states in one
-* Compute avrg on 4 first turns
+
+# Quality
+
 * Tests on simple cases
 
 # End goal

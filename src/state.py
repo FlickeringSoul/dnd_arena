@@ -44,7 +44,7 @@ class State:
             return self.modules[current_module_index]
         return None
 
-    def apply_action_event_cost(self, action_event: ActionEvent):
+    def apply_action_event_cost(self, action_event: ActionEvent) -> None:
         if action_event.action_cost is ActionCost.NONE:
             return
         action_event.origin_character.action_availability[action_event.action_cost] = False

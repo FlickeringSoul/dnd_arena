@@ -10,7 +10,7 @@ from spell import Spell
 class EldritchBlast(Spell):
     number_of_blast_left: int = 0
 
-    def on_action_use_callback(self):
+    def on_action_use_callback(self) -> None:
         if self.number_of_blast_left == 0:
             self.number_of_blast_left = self.cantrip_multiplier() - 1
             return

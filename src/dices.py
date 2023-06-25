@@ -18,6 +18,13 @@ class Dices(Enum):
     def as_random_variable(self) -> RandomVariable:
         return RandomVariable.from_values([i for i in range(1, self.value + 1)])
 
+    def __mul__(self, other: int) -> 'DiceBag':
+        return DiceBag(
+            dices={
+                (True, self): other
+            }
+        )
+
 
 @dataclass
 class DiceBag:

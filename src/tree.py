@@ -7,7 +7,7 @@ from typing import cast
 
 from character import Character
 from damage import Damage
-from event import Choice, Outcome, RandomOutcome
+from event import Choice, RandomOutcome
 from state import State
 from utils import ExplainedValue, HistoryAddition
 
@@ -15,18 +15,19 @@ from utils import ExplainedValue, HistoryAddition
 @dataclass
 class TreeNode:
     state: State
-    outcome: Outcome | None = None
+    outcome: RandomOutcome | Choice | None = None
     parent: 'TreeNode | None' = None
     children: list['TreeNode'] = field(init=False, default_factory=list)
 
-    def print_history_tree(self):
+    def print_history_tree(self) -> None:
         history = ''
-        while self.outcome is not None:
+        while self.parent is not None:
+            assert self.outcome is not None
             history = f'{self.outcome.name} -> ' + history
             self = self.parent
         print(history)
 
-    def print_full_tree(self, suffix: str = ''):
+    def print_full_tree(self, suffix: str = '') -> None:
         new_suffix = suffix + f' -> {self.outcome.name}' if self.outcome is not None else ''
         if len(self.children) == 0:
             print(new_suffix + f' -> {[(creature.name, creature.total_damage_taken) for creature in self.state.creatures]}')
