@@ -3,17 +3,18 @@ import copy
 import utils
 from action import ActionEvent
 from event import Choice, RandomOutcome
-from factory import TheGenie
+from factory import SimpleRogue
 from state import State
 from tree import TreeNode, find_best_strategy
 
 
 def test_interactive_arena() -> None:
-    state = TheGenie(level=1).get_test_state()
+    # state = TheGenie(level=1).get_test_state()
+    state = SimpleRogue(level=2).get_test_state()
     while True:
         possibles_outcomes = state.forward_until_branch()
         assert possibles_outcomes is not None
-        print(f'Total damage taken by the punching ball is: {state.creatures[1].total_damage_taken}')
+        print(f'Total damage taken by the punching ball is: {state.creatures[0].total_damage_taken}')
         print('Possible outcomes are:')
         for i, outcome in enumerate(possibles_outcomes):
             print(f'{i}: {display_outcome(outcome)}')
@@ -28,7 +29,7 @@ def display_outcome(outcome: RandomOutcome | Choice) -> str:
     if isinstance(outcome, Choice):
         if isinstance(outcome.choice, ActionEvent):
             assert outcome.choice.target is not None
-            return f'{outcome.choice.name.__name__} -> {outcome.choice.target.name}'
+            return f'{outcome.choice.action_module.__name__} -> {outcome.choice.target.name}'
         return outcome.choice.__class__.__name__
     return str(outcome)
 
@@ -55,13 +56,19 @@ def exhaust_tree(state: State) -> TreeNode:
 
 
 def test_tree() -> None:
-    state = TheGenie(1).get_test_state()
+    state = SimpleRogue(2).get_test_state()
     root_node = exhaust_tree(state)
     root_node.print_full_tree()
     best_strategy = find_best_strategy(root_node)
     print(best_strategy)
     print('\n\n')
-    print(utils.repr_history(best_strategy.scores['Genius Warlock'].history))
+    print(best_strategy.choices)
+    usernames = [u for u in best_strategy.scores.keys() if u != 'punching_ball']
+    assert len(usernames) == 1, f'{usernames=}'
+    [username] = usernames
+    score_value = best_strategy.scores[username].value
+    print('Score =', round(float(score_value), 4))
+    print(utils.repr_history(best_strategy.scores[username].history))
 
 
 if __name__ == '__main__':

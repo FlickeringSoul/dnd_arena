@@ -1,6 +1,6 @@
 
+from ability import Ability
 from action import ActionEvent
-from attribute import Attribute
 from damage import DamageType
 from event import Choice, Event, EventSteps, RandomOutcome
 from module import Module
@@ -17,9 +17,10 @@ class AgonizingBlast(Module):
             return None
         if event.event_step is not EventSteps.CRIT and event.event_step is not EventSteps.REGULAR_HIT:
             return None
-        if event.name != EldritchBlast:
+        if event.action_module != EldritchBlast:
             return None
         if event.origin_character != self.origin_character:
             return None
-        event.attack_damage[DamageType.Force] += self.origin_character.attribute_modifier(Attribute.Charisma)
+        assert event.attack is not None
+        event.attack.damage[DamageType.Force] += self.origin_character.ability_modifier(Ability.Charisma)
         return None

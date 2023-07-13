@@ -95,7 +95,7 @@ def find_best_strategy(node: TreeNode) -> Strategy:
             if best_strategy.scores[current_turn_creature_id].value <= strategy.scores[current_turn_creature_id].value:
                 best_strategy = strategy
                 child_outcome = cast(Choice, child.outcome)
-                strategy.choices.append(child_outcome.name)
+                strategy.choices.insert(0, child_outcome.name)
         return best_strategy
     else:
         raise ValueError('Unexpected: not uniform type of outcomes')

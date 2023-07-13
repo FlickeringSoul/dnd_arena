@@ -7,7 +7,7 @@ import pytest
 import utils
 from damage import Damage, DamageType
 from dices import DiceBag, Dices
-from factory import SimpleRogue, SimpleWarlock
+from factory import LightFootHalflingRogue, SimpleRogue, SimpleWarlock
 from main import exhaust_tree
 from tree import find_best_strategy
 
@@ -31,6 +31,12 @@ def test_damage():
     critical_dmg = dmg.as_critical()
     LOGGER.debug(f'{critical_dmg=} {critical_dmg.avg()=}')
     assert dmg.as_critical().avg() == Fraction(11, 1)
+
+
+class BaseDPRCalculator:
+
+    def p_critical(self) -> Fraction:
+        return Fraction(1, 20)
 
 
 @dataclass
@@ -84,8 +90,6 @@ class ExpectedDPRCalculator:
         self.usual_evolution(level)
         return self.expected_dpr()
 
-
-
 @pytest.mark.parametrize(
         argnames='level',
         argvalues=list(range(1, 6))
@@ -111,6 +115,21 @@ def test_simple_rogue(level: int):
     tree = exhaust_tree(test_state)
     best_strategy = find_best_strategy(tree)
     rogue_score = best_strategy.scores[simple_rogue.character.name]
+    LOGGER.debug(utils.repr_history(rogue_score.history))
+    LOGGER.debug(rogue_score.value)
+    assert rogue_score.value == ExpectedDPRCalculator.simple_rogue(level)
+
+
+@pytest.mark.parametrize(
+        argnames='level',
+        argvalues=list(range(1,2))
+)
+def test_light_foot_halfling_rogue(level: int):
+    light_foot_halfling_rogue = LightFootHalflingRogue(level)
+    test_state = light_foot_halfling_rogue.get_test_state()
+    tree = exhaust_tree(test_state)
+    best_strategy = find_best_strategy(tree)
+    rogue_score = best_strategy.scores[light_foot_halfling_rogue.character.name]
     LOGGER.debug(utils.repr_history(rogue_score.history))
     LOGGER.debug(rogue_score.value)
     assert rogue_score.value == ExpectedDPRCalculator.simple_rogue(level)

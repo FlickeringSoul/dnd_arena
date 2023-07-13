@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from action import ActionCost, ActionEvent
+from action import ActionCost, ActionEvent, Attack
 from damage import Damage, DamageType
 from dices import DiceBag, Dices
 from spell import Spell
@@ -29,8 +29,10 @@ class EldritchBlast(Spell):
             is_an_attack=True,
             is_a_spell=True,
             action_cost=cost,
-            attack_damage=Damage().add(DamageType.Force, Dices.d10),
-            attack_roll_modifiers=DiceBag() + self.spell_attack_bonus(),
-            name=EldritchBlast,
+            attack=Attack(
+                damage=Damage().add(DamageType.Force, Dices.d10),
+                roll_modifiers=DiceBag() + self.spell_attack_bonus(),
+            ),
+            action_module=EldritchBlast,
             on_action_selected_callback=self.on_action_use_callback
         )

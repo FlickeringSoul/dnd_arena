@@ -8,6 +8,7 @@ from event import (Choice, EndOfTurnEvent, Event, EventSteps, RandomOutcome,
                    StartOfTurnEvent)
 from module import Module
 
+LOGGER = logging.getLogger('dnd')
 
 @dataclass
 class State:
@@ -75,7 +76,7 @@ class State:
                 for target in self.search_all_targets(action_event=possible_event):
                     possible_event_copy = copy.copy(possible_event)
                     possible_event_copy.target = target
-                    choices.append(Choice(choice=possible_event_copy, name=f'{possible_event.name.__name__} on {target.name}'))
+                    choices.append(Choice(choice=possible_event_copy, name=f'{possible_event.action_module.__name__} on {target.name}'))
             else:
                 choices.append(Choice(choice=possible_event, name=f'{possible_event.__class__.__name__}'))
         assert len(choices) > 0
@@ -117,10 +118,11 @@ class State:
 
     def logging_progress(self) -> None:
         current_event = self.current_event()
-        logging.debug(f'Current event: {current_event.__class__.__name__}, ' +
-            f'Current step: {current_event.event_step if current_event is not None else None}, ' +
-            f'Current module: {self.current_event_module().__class__.__name__}' +
-            f'Current Character: {self.current_turn_creature().name}')
+        debug_text_lines = [f'Current event: {current_event.__class__.__name__}']
+        debug_text_lines.append(f'Current step: {current_event.event_step.name if current_event is not None else None}')
+        debug_text_lines.append(f'Current module: {self.current_event_module().__class__.__name__}')
+        debug_text_lines.append(f'Current Character: {self.current_turn_creature().name}')
+        LOGGER.debug(', '.join(debug_text_lines))
 
     def forward_until_branch(self, relative_round_limit: int | None = None, absolute_round_limit: int | None = None) -> list[Choice] | list[RandomOutcome] | None:
         if relative_round_limit is not None and absolute_round_limit is not None:

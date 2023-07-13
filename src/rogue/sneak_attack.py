@@ -27,19 +27,20 @@ class SneakAttack(Module):
             self.on_hit(event)
         return None
 
-    def on_hit(self, attack: ActionEvent) -> None:
+    def on_hit(self, action_event: ActionEvent) -> None:
+        assert action_event.attack is not None
         if self.available is False:
             return
-        if attack.weapon_used is None:
+        if action_event.attack.weapon_used is None:
             return
-        if not (WeaponProperties.Range | WeaponProperties.Finesse) & attack.weapon_used.properties:
+        if not (WeaponProperties.Range | WeaponProperties.Finesse) & action_event.attack.weapon_used.properties:
             return
         # TODO: should be rogue class level and not character level
         assert self.origin_character is not None
         assert self.origin_character.level is not None
         nb_of_dices = ((self.origin_character.level - 1)// 2) + 1
-        sneak_attack_damage = Damage().add(attack.weapon_used.damage_type, Dices.d6 * nb_of_dices)
-        if attack.event_step is EventSteps.CRIT:
+        sneak_attack_damage = Damage().add(action_event.attack.weapon_used.damage_type, Dices.d6 * nb_of_dices)
+        if action_event.event_step is EventSteps.CRIT:
             sneak_attack_damage = sneak_attack_damage.as_critical()
-        attack.attack_damage += sneak_attack_damage
+        action_event.attack.damage += sneak_attack_damage
         self.available = False

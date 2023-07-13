@@ -5,19 +5,19 @@ from dataclasses import dataclass, field
 from fractions import Fraction
 from typing import Any, Callable
 
+LOGGER = logging.getLogger('dnd')
 
 def config_logging() -> None:
     handler = logging.StreamHandler()
-    logger = logging.getLogger()
-    logger.addHandler(handler)
-    logger.setLevel(logging.DEBUG)
+    LOGGER.addHandler(handler)
+    LOGGER.setLevel(logging.DEBUG)
 
 
 def debug_decorator(function: Callable) -> Callable:
     def wrapped_function(*args: list[Any], **kwargs: dict[str, Any]) -> Any:
-        logging.debug(f'Function {function.__name__} called with args={args} and kwargs={kwargs}')
+        LOGGER.debug(f'Function {function.__name__} called with args={args} and kwargs={kwargs}')
         res = function(*args, **kwargs)
-        logging.debug(f'Function {function.__name__} returned with value = {res}')
+        LOGGER.debug(f'Function {function.__name__} returned with value = {res}')
         return res
     return wrapped_function
 

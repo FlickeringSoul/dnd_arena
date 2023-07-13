@@ -5,11 +5,13 @@ Here we construct state and builds for testing our scripts
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
-from attribute import Attribute, verify_starting_attributes
+from ability import Ability, AbilitySkill, verify_starting_ability_scores
+from action_cost import ActionCost
 from build import Build
 from character import Character
 from damage import DamageType
 from feature import EndOfTurnAction, StartOfTurnFeature
+from hide import HideAction
 from module import Module
 from rogue.sneak_attack import SneakAttack
 from state import State
@@ -35,7 +37,7 @@ class AbstractFactory(ABC):
     def get_test_state(self) -> State:
         punching_ball = Character(
             name='punching_ball',
-            attributes={attribute: 10 for attribute in Attribute}
+            ability_scores={attribute: 10 for attribute in Ability}
         )
         build = self.get_build()
         state = State(
@@ -63,20 +65,20 @@ class AbstractFactory(ABC):
 class SimpleRogue(AbstractFactory):
 
     def _on_create(self) -> None:
-        starting_attributes = {
-            Attribute.Strength: 8,
-            Attribute.Dexterity: 15,
-            Attribute.Constitution: 15,
-            Attribute.Wisdom: 8,
-            Attribute.Intelligence: 10,
-            Attribute.Charisma: 14,
+        starting_ability_scores = {
+            Ability.Strength: 8,
+            Ability.Dexterity: 15,
+            Ability.Constitution: 15,
+            Ability.Wisdom: 8,
+            Ability.Intelligence: 10,
+            Ability.Charisma: 14,
         }
-        verify_starting_attributes(starting_attributes)
-        starting_attributes[Attribute.Dexterity] += 1
-        starting_attributes[Attribute.Constitution] += 1
+        verify_starting_ability_scores(starting_ability_scores)
+        starting_ability_scores[Ability.Dexterity] += 1
+        starting_ability_scores[Ability.Constitution] += 1
         self.character = Character(
             name='rogue',
-            attributes=starting_attributes,
+            ability_scores=starting_ability_scores,
             level=1,
             weapon=shortbow()
         )
@@ -85,36 +87,51 @@ class SimpleRogue(AbstractFactory):
         super()._on_level_up(level)
         match level:
             case 1:
-                # TODO: expertise
+                self.character.skill_proficiencies |= AbilitySkill.Stealth
+                self.character.skill_expertise |= AbilitySkill.Stealth
                 self.modules.append(SneakAttack(origin_character=self.character))
                 self.modules.append(WeaponAttack(
                     origin_character=self.character,
                     weapon=shortbow()
                 ))
-            case 2:
-                pass # TODO: Cunning Action
             case 4:
-                self.character.attributes[Attribute.Dexterity] += 2
+                self.character.ability_scores[Ability.Dexterity] += 2
+
+
+class LightFootHalflingRogue(SimpleRogue):
+    def _on_level_up(self, level: int) -> None:
+        super()._on_level_up(level)
+        match level:
+            case 1:
+                # TODO: lucky racial feat
+                pass
+            case 2:
+                self.modules.append(
+                    HideAction(
+                        action_cost=ActionCost.BONUS_ACTION,
+                        origin_character=self.character
+                    )
+                )
 
 
 @dataclass
 class SimpleWarlock(AbstractFactory):
 
     def _on_create(self) -> None:
-        starting_attributes = {
-            Attribute.Strength: 8,
-            Attribute.Dexterity: 14,
-            Attribute.Constitution: 15,
-            Attribute.Wisdom: 8,
-            Attribute.Intelligence: 10,
-            Attribute.Charisma: 15
+        starting_ability_scores = {
+            Ability.Strength: 8,
+            Ability.Dexterity: 14,
+            Ability.Constitution: 15,
+            Ability.Wisdom: 8,
+            Ability.Intelligence: 10,
+            Ability.Charisma: 15
         }
-        verify_starting_attributes(starting_attributes)
-        starting_attributes[Attribute.Charisma] += 1
-        starting_attributes[Attribute.Constitution] += 1
+        verify_starting_ability_scores(starting_ability_scores)
+        starting_ability_scores[Ability.Charisma] += 1
+        starting_ability_scores[Ability.Constitution] += 1
         self.character = Character(
             name='warlock',
-            attributes=starting_attributes,
+            ability_scores=starting_ability_scores,
             level=1,
         )
 
@@ -125,7 +142,7 @@ class SimpleWarlock(AbstractFactory):
                 self.modules.append(
                     EldritchBlast(
                     origin_character=self.character,
-                    spellcasting_ability=Attribute.Charisma
+                    spellcasting_ability=Ability.Charisma
                     )
                 )
             case 2:
@@ -135,7 +152,7 @@ class SimpleWarlock(AbstractFactory):
                     )
                 )
             case 4:
-                self.character.attributes[Attribute.Charisma] += 2
+                self.character.ability_scores[Ability.Charisma] += 2
 
 class TheGenie(SimpleWarlock):
     def _on_level_up(self, level: int) -> None:

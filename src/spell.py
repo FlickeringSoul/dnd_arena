@@ -1,19 +1,19 @@
 from dataclasses import dataclass
 
+from ability import Ability
 from action import ActionModule
-from attribute import Attribute
 
 
 @dataclass(kw_only=True)
 class Spell(ActionModule):
-    spellcasting_ability: Attribute
+    spellcasting_ability: Ability
     spell_level: int = 0
 
     def spell_attack_bonus(self) -> int:
         assert self.origin_character is not None
         pb = self.origin_character.proficiency_bonus()
-        attr_bonus = self.origin_character.attribute_modifier(self.spellcasting_ability)
-        return pb + attr_bonus
+        ability_bonus = self.origin_character.ability_modifier(self.spellcasting_ability)
+        return pb + ability_bonus
 
     def cantrip_multiplier(self) -> int:
         """Return the usual multiplier cantrip have that depends purely on total level and not class level

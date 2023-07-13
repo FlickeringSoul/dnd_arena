@@ -30,11 +30,12 @@ class GeniesWrath(Module):
     def on_start_of_turn(self) -> None:
         self.available = True
 
-    def on_hit(self, attack: ActionEvent) -> None:
+    def on_hit(self, action_event: ActionEvent) -> None:
+        assert action_event.attack is not None
         if self.available is False:
             return
-        bonus_damage = attack.origin_character.proficiency_bonus()
-        attack.attack_damage[self.damage_type] += bonus_damage
+        bonus_damage = action_event.origin_character.proficiency_bonus()
+        action_event.attack.damage[self.damage_type] += bonus_damage
         self.available = False
 
     def on_end_of_turn(self) -> None:

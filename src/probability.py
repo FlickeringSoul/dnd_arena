@@ -2,6 +2,7 @@
 from collections import defaultdict
 from dataclasses import dataclass
 from fractions import Fraction
+from typing import Callable
 
 
 @dataclass
@@ -44,13 +45,7 @@ class RandomVariable:
     def __add__(self, other: 'RandomVariable | int') -> 'RandomVariable':
         if isinstance(other, int):
             other = RandomVariable({other: Fraction(1)})
-        outcomes: dict[int, Fraction] = defaultdict(Fraction)
-        for self_value, self_probability in self.outcomes.items():
-            for other_value, other_probability in other.outcomes.items():
-                result_value = self_value + other_value
-                result_probability = self_probability * other_probability
-                outcomes[result_value] += result_probability
-        return RandomVariable(outcomes)
+        return self.merge(other, lambda v1, v2: v1 + v2)
 
     def __neg__(self) -> 'RandomVariable':
         outcomes = {}
@@ -62,3 +57,21 @@ class RandomVariable:
         if isinstance(other, int):
             other = RandomVariable({other: Fraction(1)})
         return self + (- other)
+
+    def merge(self, other: 'RandomVariable', value_merge_func: Callable[[int, int], int]) -> 'RandomVariable':
+        merged_outcomes: dict[int, Fraction] = defaultdict(Fraction)
+        for value_1, probability_1 in self.outcomes.items():
+            for value_2, probability_2 in other.outcomes.items():
+                merged_value = value_merge_func(value_1, value_2)
+                merged_outcomes[merged_value] += probability_1 * probability_2
+        return RandomVariable(merged_outcomes)
+
+
+def advantage_disadvantage(random_variable: RandomVariable, advantage: bool, disadvantage: bool) -> RandomVariable:
+    match advantage, disadvantage:
+        case True, False:
+            return random_variable.merge(random_variable, max)
+        case False, True:
+            return random_variable.merge(random_variable, min)
+        case _:
+            return random_variable
