@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 
 from action import ActionEvent
 from damage import Damage
-from dices import Dices
+from dices import Dice
 from event import Choice, Event, EventSteps, RandomOutcome, StartOfTurnEvent
 from module import Module
 from weapon import WeaponProperties
@@ -39,7 +39,7 @@ class SneakAttack(Module):
         assert self.origin_character is not None
         assert self.origin_character.level is not None
         nb_of_dices = ((self.origin_character.level - 1)// 2) + 1
-        sneak_attack_damage = Damage().add(action_event.attack.weapon_used.damage_type, Dices.d6 * nb_of_dices)
+        sneak_attack_damage = Damage().add(action_event.attack.weapon_used.damage_type, Dice.d6 * nb_of_dices)
         if action_event.event_step is EventSteps.CRIT:
             sneak_attack_damage = sneak_attack_damage.as_critical()
         action_event.attack.damage += sneak_attack_damage

@@ -66,6 +66,23 @@ class RandomVariable:
                 merged_outcomes[merged_value] += probability_1 * probability_2
         return RandomVariable(merged_outcomes)
 
+    def reroll_on_values(self, values_to_reroll: list[int]) -> None:
+        if any(True for value in values_to_reroll if value not in self.outcomes):
+            raise ValueError('Value to reroll do not exist')
+        reroll_probability = Fraction(0)
+        for value in values_to_reroll:
+            reroll_probability += self.outcomes[value]
+        for value in self.outcomes:
+            old_factor = 0 if value in values_to_reroll else 1
+            self.outcomes[value] = self.outcomes[value] * (old_factor + reroll_probability)
+
+
+def get_d20_roll(reroll_fumble: bool) -> RandomVariable:
+    d20_random_var = RandomVariable.from_range(1, 20)
+    if reroll_fumble:
+        d20_random_var.reroll_on_values([1])
+    return d20_random_var
+
 
 def advantage_disadvantage(random_variable: RandomVariable, advantage: bool, disadvantage: bool) -> RandomVariable:
     match advantage, disadvantage:

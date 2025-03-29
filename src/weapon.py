@@ -4,7 +4,7 @@ from enum import Flag, auto
 
 from ability import Ability
 from damage import Damage, DamageType
-from dices import DiceBag, Dices
+from dices import Dice, DiceBag
 
 
 class WeaponProperties(Flag):
@@ -24,7 +24,7 @@ class WeaponProperties(Flag):
 @dataclass
 class Weapon:
     damage_type: DamageType
-    damage_dices: Dices
+    damage_dices: Dice
     nb_of_dices: int
     ability: Ability
     properties: WeaponProperties
@@ -35,7 +35,7 @@ class Weapon:
 def shortbow() -> Weapon:
     return Weapon(
     damage_type=DamageType.Piercing,
-    damage_dices=Dices.d6,
+    damage_dices=Dice.d6,
     nb_of_dices=1,
     ability=Ability.Dexterity,
     properties=WeaponProperties.Range|WeaponProperties.Ammunition|WeaponProperties.Two_Handed

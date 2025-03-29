@@ -3,7 +3,7 @@ from collections import defaultdict
 from enum import Enum, auto
 from fractions import Fraction
 
-from dices import DiceBag, Dices
+from dices import Dice, DiceBag
 
 
 class DamageType(str, Enum):
@@ -38,7 +38,7 @@ class Damage:
     def __setitem__(self, key: DamageType, item: DiceBag) -> None:
         self.__damages[key] = item
 
-    def add(self, dmg_type: DamageType, value: DiceBag | Dices | int) -> 'Damage':
+    def add(self, dmg_type: DamageType, value: DiceBag | Dice | int) -> 'Damage':
         self[dmg_type] += value
         return self
 

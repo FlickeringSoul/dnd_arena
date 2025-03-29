@@ -50,9 +50,9 @@ class Attack:
     roll_modifiers: DiceBag = field(default_factory=DiceBag)
     weapon_used: Weapon | None = None
 
-    def get_random_outcomes(self, target_armor_class: int) -> list[RandomOutcome]:
+    def get_random_outcomes(self, target_armor_class: int, base_roll_distribution: RandomVariable) -> list[RandomOutcome]:
         attack_roll_without_modifiers = advantage_disadvantage(
-            RandomVariable.from_range(1, 20),
+            base_roll_distribution,
             self.advantage,
             self.disadvantage
         )
@@ -169,6 +169,7 @@ class ActionEvent(Event):
     saving_throw: SavingThrow | None = None
     ability_contest: AbilityContest | None = None
     on_action_selected_callback: Callable[[], None] = lambda: None
+    reroll_fumbles: bool = False # Lucky feat of halfling
     target: Optional[Character] = None # What about AoE and cells ? -> None mean we need to define target later
 
     def workflow_pattern(self):

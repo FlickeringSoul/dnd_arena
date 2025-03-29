@@ -6,7 +6,7 @@ import pytest
 
 import utils
 from damage import Damage, DamageType
-from dices import DiceBag, Dices
+from dices import Dice, DiceBag
 from factory import LightFootHalflingRogue, SimpleRogue, SimpleWarlock
 from main import exhaust_tree
 from tree import find_best_strategy
@@ -17,15 +17,15 @@ LOGGER.setLevel(logging.DEBUG)
 
 def test_dice_bag():
     dice_bag = DiceBag()
-    dice_bag += Dices.d10
+    dice_bag += Dice.d10
     assert dice_bag.avg() == Fraction(11, 2)
-    dice_bag += Dices.d10
+    dice_bag += Dice.d10
     LOGGER.debug(f'{dice_bag=}, {dice_bag.dices=}, {dice_bag.fix=}')
     assert dice_bag.avg() == Fraction(11, 1)
 
 
 def test_damage():
-    dmg = Damage().add(DamageType.Force, Dices.d10)
+    dmg = Damage().add(DamageType.Force, Dice.d10)
     LOGGER.debug(f'{dmg=} {dmg.avg()=}')
     assert dmg.avg() == Fraction(11, 2)
     critical_dmg = dmg.as_critical()
